@@ -1,0 +1,114 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Guesthouse | Room Allotment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/font-awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/animate-css/vivify.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/mooli.min.css' %}">
+    <style>
+        @page {
+            margin: 0;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+        }
+        .container {
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+<body>
+<div class="left">
+            <div class="container-fluid">
+
+                <div class="">
+                    <div class="col-lg-12">
+                        <div class="table-responsive left" id="current-permanent-table">
+                            {% if booking %}
+                                <table class="table spacing5 text-center">
+                                    <thead>
+                                    <tr>
+                                        <th>Room No</th>
+                                        <th>Tenant</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Room Type</th>
+                                        <th>AC Type</th>
+                                        <th>Capacity</th>
+                                        <th>Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for temp_booking in temporary_bookings %}
+                                        <tr>
+                                            <td>{{ temp_booking.room.number }}</td>
+                                            <td>{{ temp_booking.tenant.name }}</td>
+                                            <td>{{ temp_booking.start_date }}</td>
+                                            <td>{{ temp_booking.end_date }}</td>
+                                            {% if temp_booking.room.room_type == 'suite' %}
+                                                <td><span class="badge badge-info">Suite</span></td>
+                                            {% elif temp_booking.room.room_type == 'normal' %}
+                                                <td><span class="badge badge-success">Normal</span></td>
+                                            {% endif %}
+                                            {% if temp_booking.room.ac_type == 'non_ac' %}
+                                                <td><span class="badge badge-warning">Non Ac</span></td>
+                                            {% elif temp_booking.room.ac_type == 'ac' %}
+                                                <td><span class="badge badge-primary">Ac</span></td>
+                                            {% endif %}
+                                            <td>{{ temp_booking.room.capacity }}</td>
+                                            {% if temp_booking.status == 'occupied' %}
+                                                <td><span class="badge badge-primary">Occupied</span></td>
+                                            {% elif temp_booking.status == 'booked' %}
+                                                <td><span class="badge badge-warning">Booked</span></td>
+                                            {% elif temp_booking.status == 'available' %}
+                                                <td><span class="badge badge-success">Available</span></td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% if not booking %}
+                <div>
+                    <div class="align-center">
+                        <br>
+                        <br>
+                        <br>
+                        <h4>You Currently Have 0 Booking!</h4>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+<!-- Vendor JS Files -->
+<script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
+</body>
+</html>
