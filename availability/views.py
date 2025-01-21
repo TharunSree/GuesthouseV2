@@ -16,37 +16,96 @@ from django.core.management import call_command
 
 
 def index(request):
+    # Get the list of rooms, bookings, permanent bookings, and past bookings (archived)
     rooms = Room.objects.all()
     bookings = Booking.objects.all()
     permanent_bookings = PermanentBooking.objects.all()
-    dates = [dt.today() + timedelta(days=i) for i in range(31)]
 
-    # Initialize availability dictionary with two 'Available' statuses for each date
-    availability = {room.number: {date: ['Available' for __ in range(room.capacity)] for date in dates} for room in
-                    rooms}
+    # Get the selected month and year from the GET parameters, or default to the current month and year
+    try:
+        selected_month = int(request.GET.get('month', datetime.now().month))
+        selected_year = int(request.GET.get('year', datetime.now().year))
+    except ValueError:
+        selected_month = datetime.now().month
+        selected_year = datetime.now().year
+
+    selected_room = request.GET.get('room', None)
+
+    # Get the first and last day of the selected month
+    first_day = datetime(selected_year, selected_month, 1)
+    last_day = datetime(selected_year, selected_month + 1, 1) - timedelta(days=1)
+
+    # Get the weekday of the first day of the month (0=Monday, 6=Sunday)
+    first_day_weekday = first_day.weekday()  # 0 for Monday, 6 for Sunday
+
+    # Generate list of all days in the selected month
+    days_in_month = [first_day + timedelta(days=i) for i in range((last_day - first_day).days + 1)]
+
+    # Create a list for the calendar, including only the days of the selected month
+    days_in_calendar = []
+
+    # Pre-fill the previous month's days to align the start of the first week properly
+    if first_day_weekday > 0:  # If the first day is not Monday, we need to fill days from the previous month
+        prev_month_last_day = first_day - timedelta(days=1)
+        prev_month_days = [prev_month_last_day - timedelta(days=i) for i in range(first_day_weekday)]
+        days_in_calendar.extend(reversed(prev_month_days))  # Add days from previous month (only for alignment)
+
+    # Add current month days (from first day to last day)
+    days_in_calendar.extend(days_in_month)
+
+    # Fill in the next month's days only if the last week isn't full (this ensures calendar completeness)
+    while len(days_in_calendar) % 7 != 0:
+        next_month_day = last_day + timedelta(days=1)
+        days_in_calendar.append(next_month_day)
+        last_day = next_month_day
+
+    # Group the days into weeks (7 days per week)
+    weeks = [days_in_calendar[i:i + 7] for i in range(0, len(days_in_calendar), 7)]
+
+    # Initialize the availability dictionary, now considering capacity
+    availability = {
+        room.number: {day.day: ['Available'] * room.capacity for day in days_in_month}
+        for room in rooms
+    }
 
     # Update availability based on temporary bookings
     for booking in bookings:
-        for date in dates:
-            if booking.start_date <= date <= booking.end_date:
-                # Find the first available slot in the availability dictionary for the current date
-                slot_index = availability[booking.room.number][date].index('Available')
-                # Update the slot with the booking status
-                availability[booking.room.number][date][slot_index] = booking.status
+        for date in days_in_month:
+            if booking.start_date <= date.date() <= booking.end_date:
+                # Find the first available spot for the room on this date
+                room_availability = availability[booking.room.number][date.day]
+                for i in range(len(room_availability)):
+                    if room_availability[i] == 'Available':
+                        room_availability[i] = 'Booked'
+                        break
 
     # Update availability based on permanent bookings
     for permanent_booking in permanent_bookings:
-        for date in dates:
-            # Find the first available slot in the availability dictionary for the current date
-            slot_index = availability[permanent_booking.room.number][date].index('Available')
-            # Update the slot with the permanent booking status
-            availability[permanent_booking.room.number][date][slot_index] = 'Permanent'
+        end_date = datetime.max.date() if permanent_booking.end_date is None else permanent_booking.end_date
+        for date in days_in_month:
+            if permanent_booking.start_date <= date.date() <= end_date:
+                # Find the first available spot for the room on this date
+                room_availability = availability[permanent_booking.room.number][date.day]
+                for i in range(len(room_availability)):
+                    if room_availability[i] == 'Available':
+                        room_availability[i] = 'Permanent'
+                        break
 
+    # Add to context the data needed for the template
     context = {
         'rooms': rooms,
-        'dates': dates,
+        'weeks': weeks,
         'availability': availability,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'selected_room': selected_room,
+        'months': {
+            1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+            7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+        },
+        'years': [datetime.now().year, datetime.now().year - 1, datetime.now().year + 1],
     }
+
     return render(request, 'availability/index.html', context)
 
 
@@ -235,10 +294,11 @@ def past_occupants(request):
 
 @login_required
 def room_chart(request):
-    # Get the list of rooms, bookings, and permanent bookings
+    # Get the list of rooms, bookings, permanent bookings, and past bookings (archived)
     rooms = Room.objects.all()
     bookings = Booking.objects.all()
     permanent_bookings = PermanentBooking.objects.all()
+    archived_bookings = ArchivedBooking.objects.all()
 
     # Get the selected month and year from the GET parameters, or default to the current month and year
     try:
@@ -310,6 +370,17 @@ def room_chart(request):
                         room_availability[i] = 'Permanent'
                         break
 
+    # Update availability based on archived/past bookings (those before today)
+    for archived_booking in archived_bookings:
+        for date in days_in_month:
+            if archived_booking.checkin_date <= date.date() <= archived_booking.checkout_date:
+                # Find the first available spot for the room on this date
+                room_availability = availability[archived_booking.room.number][date.day]
+                for i in range(len(room_availability)):
+                    if room_availability[i] == 'Available':
+                        room_availability[i] = 'Booked'  # Treat archived bookings as "Booked"
+                        break
+
     # Add to context the data needed for the template
     context = {
         'rooms': rooms,
@@ -326,6 +397,7 @@ def room_chart(request):
     }
 
     return render(request, 'room-chart.html', context)
+
 
 
 

@@ -29,112 +29,111 @@
         </div>
 
 
-{% include 'header.html' %}
-            <div id="main-content">
-                <div class="container-fluid">
-                    <div class="block-header">
-                        <div class="row clearfix">
-                            <div class="col-lg-4 col-md-12 col-sm-12">
-                                <h3>Hi, Welcome Back!</h3>
-                                <span>Allot New Room,</span>
-                            </div>
+        {% include 'header.html' %}
+        <div id="main-content">
+            <div class="container-fluid">
+                <div class="block-header">
+                    <div class="row clearfix">
+                        <div class="col-lg-4 col-md-12 col-sm-12">
+                            <h3>Hi, Welcome Back!</h3>
+                            <span>Allot New Room,</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="row clearfix">
-                        <div class="col-sm-12">
-                            <div class="card">
-                                <div class="body">
-                                    {% if form.non_field_errors %}
-                                        <div class="alert alert-danger">
-                                            <ul>
-                                                {% for error in form.non_field_errors %}
-                                                    <li>{{ error }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                    {% endif %}
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Room No.</label>
-                                            <div class="col-md-6 col-sm-10">
-                                                {{ form.room }}
-                                                {% if form.room.errors %}
-                                                    <br>
-                                                    <div class="body alert alert-danger">
-                                                        {{ form.room.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="col-lg-4 col-sm-10">
-                                                <a href="{% url 'add-room' %}" class="btn btn-group-sm btn-default"><i
-                                                        class="fa fa-plus"></i></a>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Name of Tenant</label>
-                                            <div class="col-md-6 col-sm-10">
-                                                {{ form.tenant }}
+                <div class="row clearfix">
+                    <div class="col-sm-12">
+                        <div class="card">
+                            <div class="body">
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        <ul>
+                                            {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Room No.</label>
+                                        <div class="col-md-6 col-sm-10">
+                                            {{ form.room }}
+                                            {% if form.room.errors %}
                                                 <br>
-                                                {% if form.tenant.errors %}
-                                                    <div class="body alert alert-danger">
-                                                        {{ form.tenant.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="col-lg-4 col-sm-10">
-                                                <a href="{% url 'add-tenant' %}" class="btn btn-group-sm btn-default"><i
-                                                        class="fa fa-plus"></i></a>
-                                            </div>
+                                                <div class="body alert alert-danger">
+                                                    {{ form.room.errors }}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Start Date</label>
-                                            <div class="col-md-6 col-sm-10">
-                                                {{ form.start_date }}
-                                                {% if form.start_date.errors %}
-                                                    <br>
-                                                    <div class="body alert alert-danger">
-                                                        {{ form.start_date.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
+                                        <div class="col-lg-4 col-sm-10">
+                                            <a href="{% url 'add-room' %}" class="btn btn-group-sm btn-default"><i
+                                                    class="fa fa-plus"></i></a>
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">End Date</label>
-                                            <div class="col-md-6 col-sm-10">
-                                                {{ form.end_date }}
-                                                {% if form.end_date.errors %}
-                                                    <br>
-                                                    <div class="body alert alert-danger">
-                                                        {{ form.end_date.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Name of Tenant</label>
+                                        <div class="col-md-6 col-sm-10">
+                                            {{ form.tenant }}
+                                            <br>
+                                            {% if form.tenant.errors %}
+                                                <div class="body alert alert-danger">
+                                                    {{ form.tenant.errors }}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Status</label>
-                                            <div class="col-md-6 col-sm-10">
-                                                {{ form.status }}
-                                                {% if form.status.errors %}
-                                                    <br>
-                                                    <div class="body alert alert-danger">
-                                                        {{ form.status.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
+                                        <div class="col-lg-4 col-sm-10">
+                                            <a href="{% url 'add-tenant' %}" class="btn btn-group-sm btn-default"><i
+                                                    class="fa fa-plus"></i></a>
                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Start Date</label>
+                                        <div class="col-md-6 col-sm-10">
+                                            {{ form.start_date }}
+                                            {% if form.start_date.errors %}
+                                                <br>
+                                                <div class="body alert alert-danger">
+                                                    {{ form.start_date.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">End Date</label>
+                                        <div class="col-md-6 col-sm-10">
+                                            {{ form.end_date }}
+                                            {% if form.end_date.errors %}
+                                                <br>
+                                                <div class="body alert alert-danger">
+                                                    {{ form.end_date.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Status</label>
+                                        <div class="col-md-6 col-sm-10">
+                                            {{ form.status }}
+                                            {% if form.status.errors %}
+                                                <br>
+                                                <div class="body alert alert-danger">
+                                                    {{ form.status.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
 
-                                        <div class="form-group row">
-                                            <div class="col-md-6 col-sm-10 offset-sm-2">
-                                                <button type="submit" class="btn btn-primary">Submit</button>
-                                                <a href="{% url 'room-allotment' %}">
-                                                    <button type="button" class="btn btn-default">Cancel</button>
-                                                </a>
-                                            </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-6 col-sm-10 offset-sm-2">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                            <a href="{% url 'room-allotment' %}">
+                                                <button type="button" class="btn btn-default">Cancel</button>
+                                            </a>
                                         </div>
-                                    </form>
-                                </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -142,6 +141,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 <script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
 <script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
