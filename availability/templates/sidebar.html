@@ -1,0 +1,74 @@
+<nav id="left-sidebar-nav" class="sidebar-nav">
+    <ul id="main-menu" class="metismenu animation-li-delay">
+        <li class="{% if current_url == 'room-allotment' or current_url == 'add-temp-booking' or current_url == 'add-perm-booking' or current_url == 'room-chart' or current_url == 'perm-room-allotment' or current_url == 'past-booking' %}active{% endif %}">
+            <a href="{% url 'room-allotment' %}" class="has-arrow">
+                <span>Room Allotment</span>
+            </a>
+            <ul>
+                <li class="{% if current_url == 'room-chart' %}active{% endif %}">
+                    <a href="{% url 'room-chart' %}">Allotment Chart</a>
+                </li>
+                <li class="{% if current_url == 'room-allotment' %}active{% endif %}">
+                    <a href="{% url 'room-allotment' %}">Temporary Booking</a>
+                </li>
+                <li class="{% if current_url == 'perm-room-allotment' %}active{% endif %}">
+                    <a href="{% url 'perm-room-allotment' %}">Permanent Booking</a>
+                </li>
+                <li class="{% if current_url == 'past-booking' %}active{% endif %}">
+                    <a href="{% url 'past-booking' %}">Past Booking</a>
+                </li>
+                <li class="{% if current_url == 'add-temp-booking' %}active{% endif %}">
+                    <a href="{% url 'add-temp-booking' %}">Add Temporary Booking</a>
+                </li>
+                <li class="{% if current_url == 'add-perm-booking' %}active{% endif %}">
+                    <a href="{% url 'add-perm-booking' %}">Add Permanent Booking</a>
+                </li>
+
+            </ul>
+        </li>
+        <li class="{% if current_url == 'occupants' or current_url == 'add-tenant' or current_url == 'past-occupants' %}active{% endif %}">
+            <a href="{% url 'occupants' %}" class="has-arrow">
+                <span>Guests</span>
+            </a>
+            <ul>
+                <li class="{% if current_url == 'add-tenant' %}active{% endif %}">
+                    <a href="{% url 'add-tenant' %}">Add Guest</a>
+                </li>
+                <li class="{% if current_url == 'occupants' %}active{% endif %}">
+                    <a href="{% url 'occupants' %}">Current Guests</a>
+                </li>
+                <li class="{% if current_url == 'past-occupants' %}active{% endif %}">
+                    <a href="{% url 'past-occupants' %}">Past Guest</a>
+                </li>
+            </ul>
+        </li>
+        <li class="{% if current_url == 'rooms' or current_url == 'add-room' %}active{% endif %}">
+            <a href="{% url 'rooms' %}" class="has-arrow">
+                <span>Rooms</span>
+            </a>
+            <ul>
+                <li class="{% if current_url == 'rooms' %}active{% endif %}">
+                    <a href="{% url 'rooms' %}">All Rooms</a>
+                </li>
+                <li class="{% if current_url == 'add-room' %}active{% endif %}">
+                    <a href="{% url 'add-room' %}">Add Room</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "{% url 'delete-expired-bookings' %}",
+            method: "GET",
+            success: function (response) {
+                console.log(response); // Optional: handle the response as needed
+            },
+            error: function (xhr, status, error) {
+                console.error("Error deleting expired bookings:", error); // Optional: handle errors
+            }
+        });
+    });
+</script>

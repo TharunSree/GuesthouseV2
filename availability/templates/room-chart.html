@@ -25,60 +25,86 @@
         </div>
     </div>
     {% include 'header.html' %}
-        <div id="main-content">
-            <div class="container-fluid">
-                <div class="block-header">
-                    <div class="row clearfix">
-                        <div class="col-lg-4 col-md-12 col-sm-12">
-                            <h1>Room Allotments for the next 31 Days</h1>
-                            <span>Room Allotments,</span>
+    <div id="main-content">
+        <div class="container-fluid">
+            <div class="block-header">
+                <div class="row clearfix">
+                    <div class="col-lg-12">
+                        <div class="form-inline mb-3">
+                            <label for="month" class="mr-2">Month:</label>
+                            <select id="month" class="form-control mr-3">
+                                {% for month_num, month_name in months.items %}
+                                    <option value="{{ month_num }}"
+                                            {% if month_num == selected_month %}selected{% endif %}>{{ month_name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="year" class="mr-2">Year:</label>
+                            <select id="year" class="form-control mr-3">
+                                {% for year in years %}
+                                    <option value="{{ year }}"
+                                            {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="room" class="mr-2">Room:</label>
+                            <select id="room" class="form-control">
+                                {% for room in rooms %}
+                                    <option value="{{ room.number }}"
+                                            {% if room.number == selected_room %}selected{% endif %}>
+                                        Room {{ room.number }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <button id="filter-button" class="btn btn-primary ml-3">Filter</button>
                         </div>
                     </div>
                 </div>
-                <div class="row clearfix">
-                    <div class="col-lg-12">
-                        <div class="table-responsive">
-                                <table class="table table-hover table-custom spacing5 text-center">
-                                    <thead>
-                                    <tr>
-                                        <th>Room</th>
-                                        <th>Type</th>
-                                        <th>Capacity</th>
-                                        <th>AC</th>
-                                        {% for date in dates %}
-                                            <th>{{ date|date:"M d" }}</th>
-                                        {% endfor %}
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for room in rooms %}
-                                        <tr>
-                                            <td>{{ room.number }}</td>
-                                            <td>{{ room.get_room_type_display }}</td>
-                                            <td>{{ room.capacity }}</td>
-                                            <td>{{ room.get_ac_type_display }}</td>
-                                            {% for date in dates %}
-                                                {% with availability|get_item:room.number|get_item:date as statuses %}
-                                                    <td class="status-cell">
+            </div>
+            <div class="row clearfix">
+                <div class="col-lg-12">
+                    <div class="table-responsive" id="calendar-container">
+                        <table class="table table-hover table-custom spacing5 text-center">
+                            <thead>
+                            <tr>
+                                <th>Sunday</th>
+                                <th>Monday</th>
+                                <th>Tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                                <th>Saturday</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for week in weeks %}
+                                <tr>
+                                    {% for day in week %}
+                                        <td>
+                                            {% if day and day.month == selected_month %}
+                                                <div>{{ day.day }}</div>
+                                                <div>
+                                                {% if selected_room %}
+                                                    {% with statuses=availability|get_item:selected_room|get_item:day.day %}
                                                         {% for status in statuses %}
-                                                            {% if status == 'Available' %}
-                                                                <span class="badge badge-success">Available</span><br>
-                                                            {% elif status == 'booked' %}
-                                                                <span class="badge badge-danger">Booked</span><br>
-                                                            {% elif status == 'Permanent' %}
-                                                                <span class="badge badge-info">Permanent</span><br>
-                                                            {% elif status == 'occupied' %}
-                                                                <span class="badge badge-primary">Occupied</span><br>
-                                                            {% endif %}
+                                                        {% if status == 'Available' %}
+                                                            <span class="badge badge-success">Available</span><br>
+                                                        {% elif status == 'Booked' %}
+                                                            <span class="badge badge-danger">Booked</span><br>
+                                                        {% elif status == 'Permanent' %}
+                                                            <span class="badge badge-warning">Permanent</span><br>
+                                                        {% endif %}
                                                         {% endfor %}
-                                                    </td>
-                                                {% endwith %}
-                                            {% endfor %}
-                                        </tr>
+                                                    {% endwith %}
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </td>
                                     {% endfor %}
-                                    </tbody>
-                                </table>
-                        </div>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -88,6 +114,16 @@
 <script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
 <script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
 <script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
-</body>
-</html>
+<script>
+    document.getElementById('filter-button').addEventListener('click', function () {
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        const room = document.getElementById('room').value;
 
+        const params = new URLSearchParams({month, year, room});
+        window.location.href = '?' + params.toString();
+    });
+</script>
+</body>
+
+</html>

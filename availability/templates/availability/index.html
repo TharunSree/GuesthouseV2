@@ -1,0 +1,172 @@
+{% load custom_tags %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Guest House | Room Allotment</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="description"
+          content="GuesthouseBootstrap 4x admin is super flexible, powerful, clean &amp; modern responsive admin dashboard with unlimited possibilities.">
+    <meta name="author" content="GetBootstrap, design by: puffintheme.com">
+
+    <link rel="icon" href="{% static 'assets/images/favicon.svg' %}" type="image/x-icon">
+    <!-- VENDOR CSS -->
+    <link rel="stylesheet" href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/font-awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/animate-css/vivify.min.css' %}">
+
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/mooli.min.css' %}">
+</head>
+<body>
+<div id="body" class="theme-cyan">
+    <!-- Page Loader -->
+    <div class="page-loader-wrapper">
+        <div class="loader">
+            <div class="mt-3"><img src="{% static 'assets/images/icon.svg' %}" width="40" height="40" alt="Mooli"></div>
+            <p>Please wait...</p>
+        </div>
+    </div>
+
+    <!-- Theme Setting -->
+    <div class="themesetting">
+        <a href="javascript:void(0);" class="theme_btn"><i class="fa fa-gear fa-spin"></i></a>
+        <ul class="list-group">
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <span>Dark Mode</span>
+                <label class="switch dark_mode">
+                    <input type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+            </li>
+        </ul>
+    </div>
+    <!-- Overlay For Sidebars -->
+    <div class="overlay"></div>
+
+    <div id="wrapper">
+        <!-- Page top navbar -->
+        <nav class="navbar navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-left">
+                    <div class="navbar-btn">
+                        <a href="{% url 'index' %}"><img src="{% static 'assets/images/icon.svg' %}" alt="GuesthouseLogo"
+                                                  class="img-fluid logo"></a>
+                        <button type="button" class="btn-toggle-offcanvas"><i class="fa fa-align-left"></i></button>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div id="navbar-menu">
+                        <ul class="nav navbar-nav">
+                            <li class="hidden-xs"><a href="javascript:void(0);" id="btnFullscreen" class="icon-menu"><i
+                                    class="fa fa-arrows-alt"></i></a></li>
+                            <li><a href="/login/" class="icon-menu"><i class="fa fa-power-off"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <!-- Main left sidebar menu -->
+        <div id="left-sidebar" class="sidebar dark_active">
+            <a href="#" class="menu_toggle"><i class="fa fa-angle-left"></i></a>
+            <div class="navbar-brand">
+                <a href="{% url 'index' %}"><img src="{% static 'assets/images/icon.svg' %}" alt="GuesthouseLogo"
+                                          class="img-fluid logo"><span>Guest House<br>Management</span></a>
+                <button type="button" class="btn-toggle-offcanvas btn btn-sm float-right"><i class="fa fa-close"></i>
+                </button>
+            </div>
+            <div class="sidebar-scroll">
+                <div class="user-account">
+                    <div class="user_div">
+                        <img src="{% static 'assets/images/user.png' %}" class="user-photo" alt="User Profile Picture">
+                    </div>
+                    <div class="dropdown">
+                        <span>Welcome</span>
+                        <a href="javascript:void(0);" class="user-name"
+                           ><strong>Guest</strong></a>
+                    </div>
+                </div>
+                <nav id="left-sidebar-nav" class="sidebar-nav">
+                    <ul id="main-menu" class="metismenu animation-li-delay">
+                        <li class="active">
+                            <a href="{% url 'index' %}" class="has-arrow"><i class="fa fa-thumbs-up"></i><span>Room Allotment</span></a>
+                            <ul>
+                                <li class="active"><a href="{% url 'index' %}">Allotment Chart</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <!-- Main body part  -->
+        <div id="main-content">
+            <div class="container-fluid">
+                <!-- Page header section  -->
+                <div class="block-header">
+                    <div class="row clearfix">
+                        <div class="col-lg-4 col-md-12 col-sm-12">
+                            <h1>Room Allotments for the next 31 Days</h1>
+                            <span>Room Allotments,</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row clearfix">
+                    <div class="col-lg-12">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom spacing5">
+                                <thead>
+                                <tr>
+                                    <th>Room</th>
+                                    <th>Type</th>
+                                    <th>Capacity</th>
+                                    <th>AC</th>
+                                    {% for date in dates %}
+                                        <th>{{ date|date:"M d" }}</th>
+                                    {% endfor %}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for room in rooms %}
+                                    <tr>
+                                        <td>{{ room.number }}</td>
+                                        <td>{{ room.get_room_type_display }}</td>
+                                        <td>{{ room.capacity }}</td>
+                                        <td>{{ room.get_ac_type_display }}</td>
+                                        {% for date in dates %}
+                                            {% with availability|get_item:room.number|get_item:date as statuses %}
+                                                <td class="status-cell">
+                                                    {% for status in statuses %}
+                                                        {% if status == 'Available' %}
+                                                            <span class="badge badge-success">Available</span><br>
+                                                        {% elif status == 'booked' %}
+                                                            <span class="badge badge-danger">Booked</span><br>
+                                                        {% elif status == 'Permanent' %}
+                                                            <span class="badge badge-info">Permanent</span><br>
+                                                        {% elif status == 'occupied' %}
+                                                            <span class="badge badge-primary">Occupied</span><br>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Javascript -->
+<script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
+</body>
+</html>

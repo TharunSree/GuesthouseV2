@@ -1,0 +1,66 @@
+{% load static %}
+
+        <!-- Overlay For Sidebars -->
+        <div class="overlay"></div>
+
+        <div id="wrapper">
+
+            <!-- Page top navbar -->
+            <nav class="navbar navbar-fixed-top">
+                <div class="container-fluid">
+                    <div class="navbar-left">
+                        <div class="navbar-btn">
+                            <a href="{% url 'room-allotment' %}"><img src="{% static 'assets/images/favicon.svg' %}"
+                                                                      alt="GuesthouseLogo"
+                                                                      class="img-fluid logo" width="50"></a>
+                            <button type="button" class="btn-toggle-offcanvas"><i class="fa fa-align-left"></i></button>
+                        </div>
+
+                    </div>
+                    <div class="navbar-right">
+                        <div id="navbar-menu">
+                            <ul class="nav navbar-nav">
+                                <li class="hidden-xs"><a href="javascript:void(0);" id="btnFullscreen"
+                                                         class="icon-menu"><i
+                                        class="fa fa-arrows-alt"></i></a></li>
+                                <li><a href="{% url 'login' %}" class="icon-menu"><i class="fa fa-power-off"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <!-- Main left sidebar menu -->
+            <div id="left-sidebar" class="sidebar dark_active">
+                <a href="#" class="menu_toggle"><i class="fa fa-angle-left"></i></a>
+                <div class="navbar-brand">
+                    <a href="{% url 'room-allotment' %}"><img src="{% static 'assets/images/favicon.svg' %}"
+                                                              alt="GuesthouseLogo"
+                                                              class="img-fluid logo" width="100"><span>Guest House<br>Management</span></a>
+                    <button type="button" class="btn-toggle-offcanvas btn btn-sm float-right"><i
+                            class="fa fa-close"></i>
+                    </button>
+                </div>
+                <div class="sidebar-scroll">
+                    <div class="user-account">
+                        <div class="user_div">
+                            <img src="{% static 'assets/images/user.png' %}" class="user-photo"
+                                 alt="User Profile Picture">
+                        </div>
+                        <div class="dropdown">
+                            <span>Welcome</span>
+                            <a href="javascript:void(0);" class="dropdown-toggle user-name"
+                               data-toggle="dropdown"><strong>{{ user.username }}</strong></a>
+                            <ul class="dropdown-menu dropdown-menu-right account vivify flipInY">
+                                <li><a href="{% url 'logout' %}"><i class="fa fa-power-off"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+
+                    {% include 'sidebar.html' %}
+                    {% block content %}
+                        <!-- Main content goes here -->
+                    {% endblock %}
+                </div>
+            </div>

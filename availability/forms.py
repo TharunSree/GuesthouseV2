@@ -35,10 +35,14 @@ class BookingForm(forms.ModelForm):
 class PermBookingForm(forms.ModelForm):
     class Meta:
         model = PermanentBooking
-        fields = ['room', 'tenant']
+        fields = ['room', 'tenant', 'start_date', 'end_date']
         widgets = {
             'room': forms.Select(attrs={'class': 'form-control'}),
             'tenant': forms.Select(attrs={'class': 'form-control'}),
+            'start_date': forms.DateInput(
+                attrs={'class': 'form-control datepicker', 'type': 'text', 'data-provide': "datepicker",
+                       'data-date-autoclose': "true", 'placeholder': "Check In",
+                       'value': datetime.date.today().strftime('%Y-%m-%d')}),
         }
 
 

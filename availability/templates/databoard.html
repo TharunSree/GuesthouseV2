@@ -1,0 +1,107 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Guesthouse | Room Allotment</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="description"
+          content="Guesthouse Bootstrap 4x admin is super flexible, powerful, clean &amp; modern responsive admin dashboard with unlimited possibilities.">
+    <meta name="author" content="GetBootstrap, design by: puffintheme.com">
+
+    <link rel="icon" href="{% static 'assets/images/favicon.svg' %}" type="image/x-icon">
+    <!-- VENDOR CSS -->
+    <link rel="stylesheet" href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/font-awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/vendor/animate-css/vivify.min.css' %}">
+
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/mooli.min.css' %}">
+
+</head>
+
+<body>
+
+<div id="body" class="theme-cyan">
+
+    <!-- Overlay For Sidebars -->
+    <div class="overlay"></div>
+
+    <div id="wrapper">
+        <!-- Main body part  -->
+        <div id="main-content">
+            <div class="container-fluid">
+                <div class="row clearfix">
+                    <div class="col-lg-12">
+                        <div class="table-responsive" id="current-permanent-table">
+                            {% if booking %}
+                                <table class="table table-hover table-custom spacing5 text-center">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Room No</th>
+                                        <th>Tenant</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Room Type</th>
+                                        <th>AC Type</th>
+                                        <th>Capacity</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for perm_booking in permanent_bookings %}
+                                        <tr>
+                                            <td>{{ perm_booking.room.number }}</td>
+                                            <td>{{ perm_booking.tenant.name }}</td>
+                                            <td><span class="badge badge-primary">Permanent</span></td>
+                                            <td><span class="badge badge-primary">Permanent</span></td>
+                                            {% if perm_booking.room.room_type == 'suite' %}
+                                                <td><span class="badge badge-info">Suite</span></td>
+                                            {% elif perm_booking.room.room_type == 'normal' %}
+                                                <td><span class="badge badge-success">Normal</span></td>
+                                            {% endif %}
+                                            {% if perm_booking.room.ac_type == 'non_ac' %}
+                                                <td><span class="badge badge-warning">Non Ac</span></td>
+                                            {% elif perm_booking.room.ac_type == 'ac' %}
+                                                <td><span class="badge badge-primary">Ac</span></td>
+                                            {% endif %}
+                                            <td>{{ perm_booking.room.capacity }}</td>
+                                            <td><span class="badge badge-primary">Permanent</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% if not booking %}
+                <div>
+                    <div class="align-center">
+                        <h4>You Currently Have 0 Booking!</h4>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Javascript -->
+
+<script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
+
+<!-- Main JS File -->
+<script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
+</body>
+</html>
