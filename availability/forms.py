@@ -74,3 +74,6 @@ class AddTenantForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': 'form-control', 'placeholder': "Enter Address"}),
             'gender': forms.Select(choices=Tenant.GENDER_CHOICES, attrs={'class': 'form-control', }),
         }
+
+
+

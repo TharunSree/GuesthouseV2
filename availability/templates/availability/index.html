@@ -52,8 +52,9 @@
             <div class="container-fluid">
                 <div class="navbar-left">
                     <div class="navbar-btn">
-                        <a href="{% url 'index' %}"><img src="{% static 'assets/images/icon.svg' %}" alt="GuesthouseLogo"
-                                                  class="img-fluid logo"></a>
+                        <a href="{% url 'index' %}"><img src="{% static 'assets/images/icon.svg' %}"
+                                                         alt="GuesthouseLogo"
+                                                         class="img-fluid logo"></a>
                         <button type="button" class="btn-toggle-offcanvas"><i class="fa fa-align-left"></i></button>
                     </div>
                 </div>
@@ -73,7 +74,7 @@
             <a href="#" class="menu_toggle"><i class="fa fa-angle-left"></i></a>
             <div class="navbar-brand">
                 <a href="{% url 'index' %}"><img src="{% static 'assets/images/icon.svg' %}" alt="GuesthouseLogo"
-                                          class="img-fluid logo"><span>Guest House<br>Management</span></a>
+                                                 class="img-fluid logo"><span>Guest House<br>Management</span></a>
                 <button type="button" class="btn-toggle-offcanvas btn btn-sm float-right"><i class="fa fa-close"></i>
                 </button>
             </div>
@@ -85,7 +86,7 @@
                     <div class="dropdown">
                         <span>Welcome</span>
                         <a href="javascript:void(0);" class="user-name"
-                           ><strong>Guest</strong></a>
+                        ><strong>Guest</strong></a>
                     </div>
                 </div>
                 <nav id="left-sidebar-nav" class="sidebar-nav">
@@ -111,6 +112,27 @@
                             <span>Room Allotments,</span>
                         </div>
                     </div>
+                </div>
+                <div class="form-inline mb-3">
+                    <label for="month" class="col-sm-1 mr-2">Month</label>
+                    <div class="col-md-2 col-sm-2 mr-3">
+                        <select id="month" class="form-control">
+                            {% for month_num, month_name in months.items %}
+                                <option value="{{ month_num }}"
+                                        {% if month_num == selected_month %}selected{% endif %}>{{ month_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="year" class="col-sm-1 mr-3">Year</label>
+                    <div class="col-md-2 col-sm-4 mr-3">
+                        <select id="year" class="form-control">
+                            {% for year in years %}
+                                <option value="{{ year }}"
+                                        {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button id="filter-button" class="btn btn-primary ml-3">Filter</button>
                 </div>
 
                 <div class="row clearfix">
@@ -168,5 +190,14 @@
 <script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
 <script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
 <script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
+<script>
+    document.getElementById('filter-button').addEventListener('click', function () {
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+
+        const params = new URLSearchParams({month, year});
+        window.location.href = '?' + params.toString();
+    });
+</script>
 </body>
 </html>

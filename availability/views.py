@@ -1,5 +1,5 @@
 # availability/views.py
-from calendar import HTMLCalendar
+from calendar import HTMLCalendar, monthrange
 
 import weasyprint
 from django.http import JsonResponse, HttpResponse
@@ -16,96 +16,46 @@ from django.core.management import call_command
 
 
 def index(request):
-    # Get the list of rooms, bookings, permanent bookings, and past bookings (archived)
     rooms = Room.objects.all()
     bookings = Booking.objects.all()
     permanent_bookings = PermanentBooking.objects.all()
+    selected_month = int(request.GET.get('month', datetime.now().month))
+    selected_year = int(request.GET.get('year', datetime.now().year))
+    num_days = monthrange(selected_year, selected_month)[1]
 
-    # Get the selected month and year from the GET parameters, or default to the current month and year
-    try:
-        selected_month = int(request.GET.get('month', datetime.now().month))
-        selected_year = int(request.GET.get('year', datetime.now().year))
-    except ValueError:
-        selected_month = datetime.now().month
-        selected_year = datetime.now().year
+    # Generate the list of dates for the selected month and year
+    dates = [datetime(selected_year, selected_month, day) for day in range(1, num_days + 1)]
 
-    selected_room = request.GET.get('room', None)
-
-    # Get the first and last day of the selected month
-    first_day = datetime(selected_year, selected_month, 1)
-    last_day = datetime(selected_year, selected_month + 1, 1) - timedelta(days=1)
-
-    # Get the weekday of the first day of the month (0=Monday, 6=Sunday)
-    first_day_weekday = first_day.weekday()  # 0 for Monday, 6 for Sunday
-
-    # Generate list of all days in the selected month
-    days_in_month = [first_day + timedelta(days=i) for i in range((last_day - first_day).days + 1)]
-
-    # Create a list for the calendar, including only the days of the selected month
-    days_in_calendar = []
-
-    # Pre-fill the previous month's days to align the start of the first week properly
-    if first_day_weekday > 0:  # If the first day is not Monday, we need to fill days from the previous month
-        prev_month_last_day = first_day - timedelta(days=1)
-        prev_month_days = [prev_month_last_day - timedelta(days=i) for i in range(first_day_weekday)]
-        days_in_calendar.extend(reversed(prev_month_days))  # Add days from previous month (only for alignment)
-
-    # Add current month days (from first day to last day)
-    days_in_calendar.extend(days_in_month)
-
-    # Fill in the next month's days only if the last week isn't full (this ensures calendar completeness)
-    while len(days_in_calendar) % 7 != 0:
-        next_month_day = last_day + timedelta(days=1)
-        days_in_calendar.append(next_month_day)
-        last_day = next_month_day
-
-    # Group the days into weeks (7 days per week)
-    weeks = [days_in_calendar[i:i + 7] for i in range(0, len(days_in_calendar), 7)]
-
-    # Initialize the availability dictionary, now considering capacity
-    availability = {
-        room.number: {day.day: ['Available'] * room.capacity for day in days_in_month}
-        for room in rooms
-    }
+    # Initialize availability dictionary with two 'Available' statuses for each date
+    availability = {room.number: {date: ['Available' for __ in range(room.capacity)] for date in dates} for room in
+                    rooms}
 
     # Update availability based on temporary bookings
     for booking in bookings:
-        for date in days_in_month:
-            if booking.start_date <= date.date() <= booking.end_date:
-                # Find the first available spot for the room on this date
-                room_availability = availability[booking.room.number][date.day]
-                for i in range(len(room_availability)):
-                    if room_availability[i] == 'Available':
-                        room_availability[i] = 'Booked'
-                        break
-
-    # Update availability based on permanent bookings
+        for date in dates:
+            if booking.start_date <= date <= booking.end_date:
+                # Find the first available slot in the availability dictionary for the current date
+                slot_index = availability[booking.room.number][date].index('Available')
+                # Update the slot with the booking status
+                availability[booking.room.number][date][slot_index] = booking.status
+        # Update availability based on permanent bookings
     for permanent_booking in permanent_bookings:
-        end_date = datetime.max.date() if permanent_booking.end_date is None else permanent_booking.end_date
-        for date in days_in_month:
-            if permanent_booking.start_date <= date.date() <= end_date:
-                # Find the first available spot for the room on this date
-                room_availability = availability[permanent_booking.room.number][date.day]
-                for i in range(len(room_availability)):
-                    if room_availability[i] == 'Available':
-                        room_availability[i] = 'Permanent'
-                        break
+        for date in dates:
+            # Find the first available slot in the availability dictionary for the current date
+            slot_index = availability[permanent_booking.room.number][date].index('Available')
+            # Update the slot with the permanent booking status
+            availability[permanent_booking.room.number][date][slot_index] = 'Permanent'
 
-    # Add to context the data needed for the template
     context = {
         'rooms': rooms,
-        'weeks': weeks,
+        'dates': dates,
         'availability': availability,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
-        'selected_room': selected_room,
         'months': {
             1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
             7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
         },
         'years': [datetime.now().year, datetime.now().year - 1, datetime.now().year + 1],
     }
-
     return render(request, 'availability/index.html', context)
 
 
@@ -163,6 +113,57 @@ def rooms(request):
         'rooms_with_free_slots': rooms_with_free_slots,
     }
     return render(request, 'rooms.html', context)
+
+
+def available_rooms(request):
+    # Parse the start and end dates from the request or use the current date
+    start_date_str = request.GET.get('start_date', datetime.now().strftime('%Y-%m-%d'))
+    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    end_date_str = request.GET.get('end_date', datetime.now().strftime('%Y-%m-%d'))
+    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+    rooms = Room.objects.all()
+    rooms_with_free_slots = []
+
+    for room in rooms:
+        # Check the number of temporary bookings for the room within the given date range
+        temporary_bookings_count = Booking.objects.filter(
+            room=room,
+            start_date__lte=end_date,
+            end_date__gte=start_date
+        ).count()
+
+        # Check the number of permanent bookings
+        permanent_bookings_count = PermanentBooking.objects.filter(room=room).count()
+
+        # Calculate total bookings and available slots
+        current_bookings_count = temporary_bookings_count + permanent_bookings_count
+        free_slots = room.capacity - current_bookings_count
+
+        # Add room to the list if at least one slot is available
+        if free_slots > 0:
+            # Determine room statuses
+            statuses = set()
+            if room.status == 'occupied':
+                statuses.add('occupied')
+            elif room.status == 'booked':
+                statuses.add('booked')
+            elif room.status == 'available':
+                statuses.add('available')
+            if permanent_bookings_count > 0:
+                statuses.add('permanent')
+
+            # Add the room with relevant details to the result list
+            rooms_with_free_slots.append({
+                'room': room,
+                'free_slots': free_slots,
+                'statuses': list(statuses),
+            })
+
+    context = {
+        'rooms_with_free_slots': rooms_with_free_slots,
+    }
+    return render(request, 'available-rooms.html', context)
 
 
 @csrf_exempt
@@ -255,6 +256,26 @@ def past_room_allotment(request):
         'bookings': bookings,
     }
     return render(request, 'past-bookings.html', context)
+
+
+@login_required
+def room_history(request):
+    rooms = Room.objects.all()
+
+    selected_room = request.GET.get('room', None)
+    past_bookings = ArchivedBooking.objects.filter(room__number=selected_room).select_related('tenant')
+    temporary_bookings = Booking.objects.filter(room__number=selected_room).select_related('tenant')
+    permanent_bookings = PermanentBooking.objects.filter(room__number=selected_room).select_related('tenant')
+    total_bookings = list(past_bookings) + list(temporary_bookings) + list(permanent_bookings)
+    bookings = past_bookings.count() + temporary_bookings.count() + permanent_bookings.count()
+
+    context = {
+        'rooms': rooms,
+        'past_bookings': total_bookings,
+        'bookings': bookings,
+        'selected_room': selected_room,
+    }
+    return render(request, 'room-history.html', context)
 
 
 @login_required
@@ -397,8 +418,6 @@ def room_chart(request):
     }
 
     return render(request, 'room-chart.html', context)
-
-
 
 
 @login_required
@@ -708,6 +727,36 @@ def generate_past_pdf(request):
     # Create HTTP response with PDF
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = 'filename="temporary-allotment.pdf"'
+    return response
+
+
+@login_required()
+def generate_room_history_pdf(request, selected_room):
+    rooms = Room.objects.all()
+
+    past_bookings = ArchivedBooking.objects.filter(room__number=selected_room).select_related('tenant')
+    temporary_bookings = Booking.objects.filter(room__number=selected_room).select_related('tenant')
+    permanent_bookings = PermanentBooking.objects.filter(room__number=selected_room).select_related('tenant')
+    total_bookings = list(past_bookings) + list(temporary_bookings) + list(permanent_bookings)
+    bookings = past_bookings.count() + temporary_bookings.count() + permanent_bookings.count()
+
+    # Render the HTML content
+    html_string = render_to_string('room_history_pdf.html',
+                                   {
+                                       'rooms': rooms,
+                                       'past_bookings': total_bookings,
+                                       'bookings': bookings,
+                                       'selected_room': selected_room,
+                                       'user': request.user})
+
+    # Create a WeasyPrint HTML object
+    html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri())
+    # Generate the PDF
+    pdf_file = html.write_pdf(stylesheets=[weasyprint.CSS(string='@page { size: A4; margin: 0; }')])
+
+    # Create HTTP response with PDF
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="room-history.pdf"'
     return response
 
 

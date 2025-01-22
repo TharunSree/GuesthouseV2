@@ -128,15 +128,23 @@ class Booking(models.Model):
                 month_of_year=self.start_date.month,
                 day_of_week='*'
             )
-            PeriodicTask.objects.create(
-                crontab=schedule,
+            # Use get_or_create to avoid duplicate PeriodicTasks
+            task, task_created = PeriodicTask.objects.get_or_create(
                 name=f'Update booking status {self.id}',
-                task='availability.tasks.update_booking_status',
-                args=json.dumps([self.id]),
-                one_off=True
+                defaults={
+                    'crontab': schedule,
+                    'task': 'availability.tasks.update_booking_status',
+                    'args': json.dumps([self.id]),
+                    'one_off': True
+                }
             )
+            if not task_created:
+                # Update the task if it already exists
+                task.crontab = schedule
+                task.args = json.dumps([self.id])
+                task.save()
         except Exception as e:
-            logger.error(f"Error creating CrontabSchedule: {e}")
+            logger.error(f"Error creating/updating PeriodicTask: {e}")
             raise
 
     def __str__(self):

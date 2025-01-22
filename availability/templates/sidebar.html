@@ -42,7 +42,7 @@
                 </li>
             </ul>
         </li>
-        <li class="{% if current_url == 'rooms' or current_url == 'add-room' %}active{% endif %}">
+        <li class="{% if current_url == 'rooms' or current_url == 'add-room' or current_url == 'room_history' or current_url == "available_rooms" %}active{% endif %}">
             <a href="{% url 'rooms' %}" class="has-arrow">
                 <span>Rooms</span>
             </a>
@@ -52,6 +52,12 @@
                 </li>
                 <li class="{% if current_url == 'add-room' %}active{% endif %}">
                     <a href="{% url 'add-room' %}">Add Room</a>
+                </li>
+                <li class="{% if current_url == 'room_history' %}active{% endif %}">
+                    <a href="{% url 'room_history' %}">Room History</a>
+                </li>
+                <li class="{% if current_url == 'available_rooms' %}active{% endif %}">
+                    <a href="{% url 'available_rooms' %}">Available Rooms</a>
                 </li>
             </ul>
         </li>

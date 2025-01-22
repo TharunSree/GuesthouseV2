@@ -37,7 +37,10 @@ urlpatterns = [
     path('past-generate-pdf/', views.generate_past_pdf, name='past_generate_pdf'),
     path('guest-pdf/', views.generate_guest_pdf, name='guest_pdf'),
     path('guest-past-pdf/', views.generate_past_guest_pdf, name='guest_past_pdf'),
+    path('room_history_pdf/<str:selected_room>/', views.generate_room_history_pdf, name='room_history_pdf'),
     path('delete-expired-bookings/', run_delete_expired_bookings, name='delete-expired-bookings'),
+    path('room_history/', room_history, name='room_history'),
+    path('available_rooms/',views.available_rooms, name="available_rooms")
 
 ]
 
