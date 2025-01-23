@@ -3,6 +3,8 @@ from calendar import HTMLCalendar, monthrange
 
 import weasyprint
 from django.db import IntegrityError
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -17,7 +19,9 @@ from django.core.management import call_command
 
 
 def index(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     bookings = Booking.objects.all()
     permanent_bookings = PermanentBooking.objects.all()
     selected_month = int(request.GET.get('month', datetime.now().month))
@@ -80,7 +84,9 @@ def user_logout(request):
 
 @login_required
 def rooms(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     rooms_with_free_slots = []
 
     for room in rooms:
@@ -123,7 +129,9 @@ def available_rooms(request):
     end_date_str = request.GET.get('end_date', datetime.now().strftime('%Y-%m-%d'))
     end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     rooms_with_free_slots = []
 
     for room in rooms:
@@ -220,7 +228,9 @@ def check_past_tenant(request):
 
 @login_required
 def room_allotment(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     temporary_bookings = Booking.objects.select_related('tenant').all()
     booking = Booking.objects.all().__len__()
     context = {
@@ -233,7 +243,9 @@ def room_allotment(request):
 
 @login_required
 def perm_room_allotment(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     permanent_bookings = PermanentBooking.objects.select_related('tenant').all()
     booking = PermanentBooking.objects.all().__len__()
 
@@ -247,7 +259,9 @@ def perm_room_allotment(request):
 
 @login_required
 def past_room_allotment(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     past_bookings = ArchivedBooking.objects.select_related('tenant').all()
     bookings = ArchivedBooking.objects.all().__len__()
 
@@ -261,7 +275,9 @@ def past_room_allotment(request):
 
 @login_required
 def room_history(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
 
     selected_room = request.GET.get('room', None)
     past_bookings = ArchivedBooking.objects.filter(room__number=selected_room).select_related('tenant')
@@ -282,7 +298,9 @@ def room_history(request):
 
 @login_required
 def occupants(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     temporary_bookings = Booking.objects.select_related('tenant').all()
     permanent_bookings = PermanentBooking.objects.select_related('tenant').all()
     tenant = Tenant.objects.all()
@@ -300,7 +318,9 @@ def occupants(request):
 
 @login_required
 def past_occupants(request):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     temporary_bookings = Booking.objects.select_related('tenant').all()
     permanent_bookings = PermanentBooking.objects.select_related('tenant').all()
     tenant = ArchivedTenant.objects.all()
@@ -318,7 +338,9 @@ def past_occupants(request):
 @login_required
 def room_chart(request):
     # Get the list of rooms, bookings, permanent bookings, and past bookings (archived)
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     bookings = Booking.objects.all()
     permanent_bookings = PermanentBooking.objects.all()
     archived_bookings = ArchivedBooking.objects.all()
@@ -665,7 +687,9 @@ def delete_tenant(request, tenant_id):
 @login_required()
 def generate_pdf(request):
     # Fetch data from the PermBookings model
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     permanent_bookings = PermanentBooking.objects.select_related('tenant').all()
     booking = PermanentBooking.objects.all().__len__()
 
@@ -692,7 +716,9 @@ def generate_pdf(request):
 @login_required()
 def generate_temp_pdf(request):
     # Fetch data from the PermBookings model
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     temporary_bookings = Booking.objects.select_related('tenant').all()
 
     booking = Booking.objects.all().__len__()
@@ -720,7 +746,9 @@ def generate_temp_pdf(request):
 @login_required()
 def generate_past_pdf(request):
     # Fetch data from the PermBookings model
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     past_bookings = ArchivedBooking.objects.select_related('tenant').all()
 
     booking = ArchivedBooking.objects.all().__len__()
@@ -747,7 +775,9 @@ def generate_past_pdf(request):
 
 @login_required()
 def generate_room_history_pdf(request, selected_room):
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
 
     past_bookings = ArchivedBooking.objects.filter(room__number=selected_room).select_related('tenant')
     temporary_bookings = Booking.objects.filter(room__number=selected_room).select_related('tenant')
@@ -778,7 +808,9 @@ def generate_room_history_pdf(request, selected_room):
 @login_required()
 def generate_guest_pdf(request):
     # Fetch data from the PermBookings model
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     tenants = Tenant.objects.all()
     temporary_bookings = Booking.objects.select_related('tenant').all()
     permanent_bookings = PermanentBooking.objects.select_related('tenant').all()
@@ -809,7 +841,9 @@ def generate_guest_pdf(request):
 @login_required()
 def generate_past_guest_pdf(request):
     # Fetch data from the PermBookings model
-    rooms = Room.objects.all()
+    rooms = Room.objects.annotate(
+        number_as_int=Cast('number', IntegerField())
+    ).order_by('number_as_int', 'number')
     tenants = ArchivedTenant.objects.all()
     archived_bookings = ArchivedBooking.objects.select_related('tenant').all()
     guest = ArchivedTenant.objects.all().__len__()
