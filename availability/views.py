@@ -160,7 +160,8 @@ def available_rooms(request):
                 'free_slots': free_slots,
                 'statuses': list(statuses),
             })
-
+    rooms_with_free_slots = sorted(rooms_with_free_slots,
+                                   key=lambda x: int(''.join(filter(str.isdigit, x['room'].number))))
     context = {
         'rooms_with_free_slots': rooms_with_free_slots,
     }
