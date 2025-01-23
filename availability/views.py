@@ -2,6 +2,7 @@
 from calendar import HTMLCalendar, monthrange
 
 import weasyprint
+from django.db import IntegrityError
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -192,8 +193,8 @@ def rebook_archived_tenant(request, archived_tenant_id):
                     gender=archived_tenant.gender
                 )
 
-            # Delete the corresponding archived tenant
-            archived_tenant.delete()
+            # Do not delete the corresponding archived tenant
+            # archived_tenant.delete()
 
             return JsonResponse({'success': True})
         except ArchivedTenant.DoesNotExist:
@@ -221,7 +222,6 @@ def room_allotment(request):
     rooms = Room.objects.all()
     temporary_bookings = Booking.objects.select_related('tenant').all()
     booking = Booking.objects.all().__len__()
-
     context = {
         'rooms': rooms,
         'temporary_bookings': temporary_bookings,
@@ -266,14 +266,15 @@ def room_history(request):
     past_bookings = ArchivedBooking.objects.filter(room__number=selected_room).select_related('tenant')
     temporary_bookings = Booking.objects.filter(room__number=selected_room).select_related('tenant')
     permanent_bookings = PermanentBooking.objects.filter(room__number=selected_room).select_related('tenant')
-    total_bookings = list(past_bookings) + list(temporary_bookings) + list(permanent_bookings)
     bookings = past_bookings.count() + temporary_bookings.count() + permanent_bookings.count()
 
     context = {
         'rooms': rooms,
-        'past_bookings': total_bookings,
+        'past_bookings': past_bookings,
         'bookings': bookings,
         'selected_room': selected_room,
+        'temporary_bookings': temporary_bookings,  # Add temporary bookings to context
+        'permanent_bookings': permanent_bookings,  # Add permanent bookings to context
     }
     return render(request, 'room-history.html', context)
 
@@ -449,27 +450,34 @@ def edit_temp_booking(request, pk):
 def delete_booking(request, booking_id):
     if request.method == 'POST':
         booking = get_object_or_404(Booking, id=booking_id)
-        archived_tenant = ArchivedTenant.objects.create(
-            booking_id=booking.id,
-            name=booking.tenant.name,
-            contact=booking.tenant.contact,
-            email=booking.tenant.email,
-            address=booking.tenant.address,
-            gender=booking.tenant.gender,
-        )
-        archived_booking = ArchivedBooking(
-            booking_id=booking.id,
-            room=booking.room,
-            tenant=archived_tenant,
-            checkin_date=str(booking.start_date),
-            checkout_date=str(booking.end_date),
-            status='deleted',
-            type='temporary'
-        )
-        archived_booking.save()
-        booking.tenant.delete()
-        booking.delete()
-        return JsonResponse({'success': True})
+        try:
+            archived_tenant, created = ArchivedTenant.objects.get_or_create(
+                name=booking.tenant.name,
+                contact=booking.tenant.contact,
+                email=booking.tenant.email,
+                defaults={
+                    'booking_id': booking.id,
+                    'address': booking.tenant.address,
+                    'gender': booking.tenant.gender,
+                }
+            )
+            archived_booking = ArchivedBooking(
+                booking_id=booking.id,
+                room=booking.room,
+                tenant=archived_tenant,
+                checkin_date=str(booking.start_date),
+                checkout_date=str(booking.end_date),
+                status='deleted',
+                type='temporary'
+            )
+            archived_booking.save()
+            if not ArchivedTenant.objects.filter(name=booking.tenant.name, contact=booking.tenant.contact,
+                                                 email=booking.tenant.email).exists():
+                booking.tenant.delete()
+            booking.delete()
+            return JsonResponse({'success': True})
+        except IntegrityError:
+            return JsonResponse({'success': False, 'error': 'Duplicate entry for ArchivedTenant'}, status=400)
     return JsonResponse({'success': False}, status=400)
 
 
@@ -502,27 +510,33 @@ def edit_perm_booking(request, pk):
 def perm_delete_booking(request, booking_id):
     if request.method == 'POST':
         booking = get_object_or_404(PermanentBooking, id=booking_id)
-        archived_tenant = ArchivedTenant.objects.create(
-            booking_id=booking.id,
-            name=booking.tenant.name,
-            contact=booking.tenant.contact,
-            email=booking.tenant.email,
-            address=booking.tenant.address,
-            gender=booking.tenant.gender,
-        )
-        archived_booking = ArchivedBooking(
-            booking_id=booking.id,
-            room=booking.room,
-            tenant=archived_tenant,
-            checkin_date=str(booking.start_date),
-            checkout_date=dt.today(),
-            status='deleted',
-            type='permanent'
-        )
-        archived_booking.save()
-        booking.tenant.delete()
-        booking.delete()
-        return JsonResponse({'success': True})
+        try:
+            archived_tenant = ArchivedTenant.objects.create(
+                booking_id=booking.id,
+                name=booking.tenant.name,
+                contact=booking.tenant.contact,
+                email=booking.tenant.email,
+                address=booking.tenant.address,
+                gender=booking.tenant.gender,
+            )
+            archived_booking = ArchivedBooking(
+                booking_id=booking.id,
+                room=booking.room,
+                tenant=archived_tenant,
+                checkin_date=str(booking.start_date),
+                checkout_date=dt.today(),
+                status='deleted',
+                type='permanent'
+            )
+            archived_booking.save()
+            # Check if the tenant is already in ArchivedTenant
+            if not ArchivedTenant.objects.filter(name=booking.tenant.name, contact=booking.tenant.contact,
+                                                 email=booking.tenant.email).exists():
+                booking.tenant.delete()
+            booking.delete()
+            return JsonResponse({'success': True})
+        except IntegrityError:
+            return JsonResponse({'success': False, 'error': 'Duplicate entry for ArchivedTenant'}, status=400)
     return JsonResponse({'success': False}, status=400)
 
 
